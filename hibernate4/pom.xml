@@ -28,7 +28,11 @@ Hibernate (http://hibernate.org) version 4.x data types.
   </properties>
 
   <dependencies>
-
+	<dependency>
+		<groupId>com.fasterxml.jackson.core</groupId>
+		<artifactId>jackson-annotations</artifactId>
+	</dependency>
+	
     <!-- what would be the best scope to use here? -->    
     <dependency>
       <groupId>org.hibernate</groupId>

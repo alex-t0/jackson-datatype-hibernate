@@ -15,7 +15,7 @@ public class InfiniteRecursion70Test extends BaseTest
     public void testInfinite() throws Exception
     {
         EntityManagerFactory emf = Persistence.createEntityManagerFactory("persistenceUnit");
-        String expected = "{\"id\":1,\"numeroContrato\":\"100001-9\",\"parcelas\":[{\"id\":1,\"numeroParcela\":1}],\"liquidacoes\":[{\"id\":1,\"valorTotal\":10000,\"parcela\":{\"id\":1,\"numeroParcela\":1}}]}";
+        String expected = "{\"parcelas\":[{\"id\":1,\"numeroParcela\":1}],\"liquidacoes\":[{\"id\":1,\"valorTotal\":10000,\"parcela\":{\"id\":1,\"numeroParcela\":1}}]}";
         final ObjectMapper mapper = mapperWithModule(true);
 
         try {

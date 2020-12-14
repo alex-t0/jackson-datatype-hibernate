@@ -34,6 +34,11 @@ Hibernate (http://hibernate.org) version 3.x data types.
 
   <dependencies>
 
+	<dependency>
+		<groupId>com.fasterxml.jackson.core</groupId>
+		<artifactId>jackson-annotations</artifactId>
+	</dependency>
+
     <!-- what would be the best scope to use here? -->    
     <dependency>
       <groupId>org.hibernate</groupId>

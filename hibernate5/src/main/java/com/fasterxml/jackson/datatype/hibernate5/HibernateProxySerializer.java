@@ -3,6 +3,7 @@ package com.fasterxml.jackson.datatype.hibernate5;
 import java.beans.Introspector;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 
@@ -45,6 +46,8 @@ public class HibernateProxySerializer
      */
     protected final BeanProperty _property;
 
+    protected final boolean _serializeProxiesAsIdOnly;
+    
     protected final boolean _forceLazyLoading;
     protected final boolean _serializeIdentifier;
     protected final boolean _nullMissingEntities;
@@ -69,32 +72,32 @@ public class HibernateProxySerializer
     @Deprecated // since 2.12
     public HibernateProxySerializer(boolean forceLazyLoading)
     {
-        this(forceLazyLoading, false, false, true, null, null, null);
+        this(forceLazyLoading, false, false, true, false, null, null, null);
     }
 
     @Deprecated // since 2.12
     public HibernateProxySerializer(boolean forceLazyLoading, boolean serializeIdentifier) {
-        this(forceLazyLoading, serializeIdentifier, false, true,
+        this(forceLazyLoading, serializeIdentifier, false, true, false,
                 null, null, null);
     }
 
     @Deprecated // since 2.12
     public HibernateProxySerializer(boolean forceLazyLoading, boolean serializeIdentifier, Mapping mapping) {
-        this(forceLazyLoading, serializeIdentifier, false,  true,
+        this(forceLazyLoading, serializeIdentifier, false,  true, false,
                 mapping, null, null);
     }
 
     @Deprecated // since 2.12
     public HibernateProxySerializer(boolean forceLazyLoading, boolean serializeIdentifier,
             boolean nullMissingEntities, Mapping mapping) {
-        this(forceLazyLoading, serializeIdentifier, nullMissingEntities, true,
+        this(forceLazyLoading, serializeIdentifier, nullMissingEntities, true, false,
                 mapping, null, null);
     }
 
     @Deprecated // since 2.12
     public HibernateProxySerializer(boolean forceLazyLoading, boolean serializeIdentifier,
             boolean nullMissingEntities, Mapping mapping, BeanProperty property) {
-        this(forceLazyLoading, serializeIdentifier, nullMissingEntities, true,
+        this(forceLazyLoading, serializeIdentifier, nullMissingEntities, true, false,
                 mapping, property, null);
     }
 
@@ -102,10 +105,10 @@ public class HibernateProxySerializer
      * @since 2.12
      */
     public HibernateProxySerializer(boolean forceLazyLoading, boolean serializeIdentifier,
-            boolean nullMissingEntities, boolean wrappedIdentifier,
+            boolean nullMissingEntities, boolean wrappedIdentifier, boolean serializeProxiesAsIdOnly,
             Mapping mapping)
     {
-        this(forceLazyLoading, serializeIdentifier, nullMissingEntities, wrappedIdentifier,
+        this(forceLazyLoading, serializeIdentifier, nullMissingEntities, wrappedIdentifier, serializeProxiesAsIdOnly,
                 mapping, null, null);
     }
 
@@ -113,13 +116,14 @@ public class HibernateProxySerializer
      * @since 2.12
      */
     public HibernateProxySerializer(boolean forceLazyLoading, boolean serializeIdentifier,
-            boolean nullMissingEntities, boolean wrappedIdentifier,
+            boolean nullMissingEntities, boolean wrappedIdentifier, boolean serializeProxiesAsIdOnly,  
             Mapping mapping, BeanProperty property, NameTransformer unwrapper)
     {
         _forceLazyLoading = forceLazyLoading;
         _serializeIdentifier = serializeIdentifier;
         _nullMissingEntities = nullMissingEntities;
         _wrappedIdentifier = wrappedIdentifier;
+        _serializeProxiesAsIdOnly = serializeProxiesAsIdOnly;
         _mapping = mapping;
         _property = property;
         _unwrapper = unwrapper;
@@ -137,6 +141,7 @@ public class HibernateProxySerializer
         _serializeIdentifier = base._serializeIdentifier;
         _nullMissingEntities = base._nullMissingEntities;
         _wrappedIdentifier = base._wrappedIdentifier;
+        _serializeProxiesAsIdOnly = base._serializeProxiesAsIdOnly;
         _mapping = base._mapping;
         _property = property;
         _unwrapper = unwrapper;
@@ -255,6 +260,25 @@ public class HibernateProxySerializer
     protected Object findProxied(HibernateProxy proxy)
     {
         LazyInitializer init = proxy.getHibernateLazyInitializer();
+        
+        if (_serializeProxiesAsIdOnly) {
+        	String idPropertyName = getIdentifierPropertyName(init);
+        	Class<?> clazz = init.getPersistentClass();
+        	Object id = init.getIdentifier();
+        	
+        	try {
+				Object replacedObject = clazz.getDeclaredConstructor().newInstance();
+				Field idField = clazz.getDeclaredField(idPropertyName);
+				idField.setAccessible(true);
+				
+				idField.set(replacedObject, id);
+				
+				return replacedObject;
+			} catch (Throwable e) {
+				 return null;
+			}
+        }
+        
         if (!_forceLazyLoading && init.isUninitialized()) {
             if (_serializeIdentifier) {
                 final Object idValue = init.getIdentifier();

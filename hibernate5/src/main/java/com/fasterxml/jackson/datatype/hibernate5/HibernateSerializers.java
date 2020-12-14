@@ -14,6 +14,7 @@ public class HibernateSerializers extends Serializers.Base
     protected final boolean _serializeIdentifiers;
     protected final boolean _nullMissingEntities;
     protected final boolean _wrappedIdentifier;
+    protected final boolean _serializeProxiesAsIdOnly;
     protected final Mapping _mapping;
 
     public HibernateSerializers(int features) {
@@ -26,6 +27,8 @@ public class HibernateSerializers extends Serializers.Base
         _serializeIdentifiers = Hibernate5Module.Feature.SERIALIZE_IDENTIFIER_FOR_LAZY_NOT_LOADED_OBJECTS.enabledIn(features);
         _nullMissingEntities = Hibernate5Module.Feature.WRITE_MISSING_ENTITIES_AS_NULL.enabledIn(features);
         _wrappedIdentifier = Hibernate5Module.Feature.WRAP_IDENTIFIER_IN_OBJECT.enabledIn(features);
+        _serializeProxiesAsIdOnly = Hibernate5Module.Feature.SERIALIZE_PROXIES_WITH_ID_ONLY.enabledIn(features);
+        
         _mapping = mapping;
     }
 
@@ -35,8 +38,8 @@ public class HibernateSerializers extends Serializers.Base
     {
         Class<?> raw = type.getRawClass();
         if (HibernateProxy.class.isAssignableFrom(raw)) {
-            return new HibernateProxySerializer(_forceLoading, _serializeIdentifiers,
-                    _nullMissingEntities, _wrappedIdentifier, _mapping);
+            return new HibernateProxySerializer(_forceLoading, _serializeIdentifiers, 
+                    _nullMissingEntities, _wrappedIdentifier, _serializeProxiesAsIdOnly, _mapping);
         }
         return null;
     }

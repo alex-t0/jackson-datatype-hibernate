@@ -2,7 +2,14 @@ package com.fasterxml.jackson.datatype.hibernate5;
 
 import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.databind.AnnotationIntrospector;
+import com.fasterxml.jackson.databind.BeanDescription;
+import com.fasterxml.jackson.databind.DeserializationConfig;
+import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.Module;
+import com.fasterxml.jackson.databind.deser.BeanDeserializerModifier;
+
+import javax.persistence.Entity;
+
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.Mapping;
 
@@ -95,9 +102,11 @@ public class Hibernate5Module extends com.fasterxml.jackson.databind.Module
          *
          * @since 2.12
          */
-        WRAP_IDENTIFIER_IN_OBJECT(true)
-        ;
+        WRAP_IDENTIFIER_IN_OBJECT(true),
+        
 
+    	SERIALIZE_PROXIES_WITH_ID_ONLY(false);
+    	
         final boolean _defaultState;
         final int _mask;
 
@@ -180,6 +189,25 @@ public class Hibernate5Module extends com.fasterxml.jackson.databind.Module
             context.appendAnnotationIntrospector(ai);
         }
         context.addSerializers(new HibernateSerializers(_mapping, _moduleFeatures));
+        
+        if (isEnabled(Feature.SERIALIZE_PROXIES_WITH_ID_ONLY)) {
+        	context.addBeanDeserializerModifier(new BeanDeserializerModifier() {
+
+				@Override
+				public JsonDeserializer<?> modifyDeserializer(DeserializationConfig config, BeanDescription beanDesc,
+						JsonDeserializer<?> deserializer) {
+					
+					Entity entityAnnotation = beanDesc.getBeanClass().getAnnotation(Entity.class);
+
+					if (entityAnnotation != null)
+						return new HibernateProxyDeserializer(_sessionFactory, deserializer);
+					
+					return deserializer;
+				}
+        		
+      	    });
+        }
+
         context.addBeanSerializerModifier(new HibernateSerializerModifier(_moduleFeatures, _sessionFactory));
     }
 
