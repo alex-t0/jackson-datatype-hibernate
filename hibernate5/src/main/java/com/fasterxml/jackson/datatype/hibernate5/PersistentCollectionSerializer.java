@@ -54,8 +54,6 @@ public class PersistentCollectionSerializer
      */
     protected final JsonSerializer<Object> _serializer;
 
-    protected final SessionFactory _sessionFactory;
-
     /*
     /**********************************************************************
     /* Life cycle
@@ -64,12 +62,11 @@ public class PersistentCollectionSerializer
 
     @SuppressWarnings("unchecked")
     public PersistentCollectionSerializer(JavaType containerType,
-            JsonSerializer<?> serializer, int features, SessionFactory sessionFactory) {
+            JsonSerializer<?> serializer, int features) {
         super(containerType);
         _originalType = containerType;
         _serializer = (JsonSerializer<Object>) serializer;
         _features = features;
-        _sessionFactory = sessionFactory;
     }
 
     /**
@@ -82,7 +79,6 @@ public class PersistentCollectionSerializer
         _originalType = base._originalType;
         _serializer = (JsonSerializer<Object>) serializer;
         _features = base._features;
-        _sessionFactory = base._sessionFactory;
     }
 
     @Override
@@ -284,19 +280,15 @@ public class PersistentCollectionSerializer
 
     protected Object findLazyValue(PersistentCollection coll) {
         // If lazy-loaded, not yet loaded, may serialize as null?
-        if (!Feature.FORCE_LAZY_LOADING.enabledIn(_features) && !coll.wasInitialized()) {
-            return null;
-        }
-        if (_sessionFactory != null) {
-            // 08-Feb-2017, tatu: and not closing this is not problematic... ?
-            Session session = openTemporarySessionForLoading(coll);
-            initializeCollection(coll, session);
-        }
-        return coll.getValue();
+        // if (!Feature.FORCE_LAZY_LOADING.enabledIn(_features) && !coll.wasInitialized()) {
+        //    return null;
+        // }
+    	
+    	return coll.getValue();
     }
 
     // Most of the code bellow is from Hibernate AbstractPersistentCollection
-    private Session openTemporarySessionForLoading(PersistentCollection coll) {
+    /*private Session openTemporarySessionForLoading(PersistentCollection coll) {
 
         final SessionFactory sf = _sessionFactory;
         final Session session = sf.openSession();
@@ -311,7 +303,7 @@ public class PersistentCollectionSerializer
         );
 
         return session;
-    }
+    }*/
 
     private void initializeCollection(PersistentCollection coll, Session session) {
 
@@ -322,17 +314,17 @@ public class PersistentCollectionSerializer
         //Above is removed after Hibernate 5
         boolean isJTA = SessionReader.isJTA(session);
 
-        if (!isJTA) {
+        /*if (!isJTA) {
             session.beginTransaction();
-        }
+        }*/
 
         coll.setCurrentSession(((SessionImplementor) session));
         Hibernate.initialize(coll);
 
-        if (!isJTA) {
+        /*if (!isJTA) {
             session.getTransaction().commit();
-        }
-        session.close();
+        }*/
+        // session.close();
     }
 
     /**
@@ -368,26 +360,31 @@ public class PersistentCollectionSerializer
         return false;
     }
 
+    // private static Object syncObj = new Object();
+    
     // since 2.8.2
     private Object convertToJavaCollection(Object value) {
-        if (!(value instanceof PersistentCollection)) {
-            return value;
-        }
+    	// synchronized (syncObj) {
+    		if (!(value instanceof PersistentCollection)) {
+                return value;
+            }
 
-        if (value instanceof Set) {
-            return convertToSet((Set<?>) value);
-        }
+            if (value instanceof Set) {
+                return convertToSet((Set<?>) value);
+            }
 
-        if (value instanceof List || value instanceof Bag) {
-            return convertToList((List<?>) value);
-        }
+            if (value instanceof List || value instanceof Bag) {
+                return convertToList((List<?>) value);
+            }
 
-        if (value instanceof Map) {
-            return convertToMap((Map<?, ?>) value);
-        }
+            if (value instanceof Map) {
+                return convertToMap((Map<?, ?>) value);
+            }
 
-        throw new IllegalArgumentException("Unsupported PersistentCollection subtype: " + value.getClass());
-    }
+            throw new IllegalArgumentException("Unsupported PersistentCollection subtype: " + value.getClass());
+	
+		// }
+   }
 
     private Object convertToList(List<?> value) {
         return new ArrayList<>(value);

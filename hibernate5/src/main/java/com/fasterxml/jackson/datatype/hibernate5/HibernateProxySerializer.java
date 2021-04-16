@@ -266,6 +266,10 @@ public class HibernateProxySerializer
         	Class<?> clazz = init.getPersistentClass();
         	Object id = init.getIdentifier();
         	
+        	if (clazz.getAnnotation(SerializeAsIs.class) != null) {
+        		
+        	}
+        	
         	try {
 				Object replacedObject = clazz.getDeclaredConstructor().newInstance();
 				Field idField = clazz.getDeclaredField(idPropertyName);

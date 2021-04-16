@@ -70,6 +70,19 @@
     </repository>
   </repositories>
 
+  <distributionManagement>
+    <repository>
+      <id>fogsoft-kie</id>
+      <name>FogSoft KIE repo</name>
+      <url>http://nexus.mrsk.fogsoft.ru/repository/fogsoft-kie/</url>
+    </repository>
+    <snapshotRepository>
+      <id>fogsoft-kie-snapshot</id>
+      <name>FogSoft KIE repo (snapshots)</name>
+      <url>http://nexus.mrsk.fogsoft.ru/repository/fogsoft-kie/</url>
+    </snapshotRepository>
+  </distributionManagement>
+
   <build>  
     <pluginManagement>
       <plugins>
@@ -94,7 +107,24 @@
             </excludes>
           </configuration>
         </plugin>
+        
+		<plugin>
+		  <groupId>org.sonatype.plugins</groupId>
+		  <artifactId>nexus-staging-maven-plugin</artifactId>
+		  <version>1.6.8</version>
+		  <extensions>true</extensions>
+		  <configuration>
+		  	<skipLocalStaging>true</skipLocalStaging>
+		  	<skipStaging>true</skipStaging>
+		    <serverId>sonatype-nexus-staging</serverId>
+		    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+		    <stagingProfileId>b34f19b9cc6224</stagingProfileId>
+		  </configuration>
+		</plugin>
+        
       </plugins>
+      
+
     </pluginManagement>
 
     <!-- 05-Jul-2020, tatu: Add generation of Gradle Module Metadata -->

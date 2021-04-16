@@ -149,7 +149,7 @@ public class Hibernate5Module extends com.fasterxml.jackson.databind.Module
      */
     protected final Mapping _mapping;
 
-    protected final SessionFactory _sessionFactory;
+    protected final com.fasterxml.jackson.datatype.hibernate5.SessionFactoryProvider _sessionFactoryProvider;
 
     /*
     /**********************************************************************
@@ -165,12 +165,12 @@ public class Hibernate5Module extends com.fasterxml.jackson.databind.Module
         this(mapping, null);
     }
 
-    public Hibernate5Module(SessionFactory sessionFactory) {
-        this(null, sessionFactory);
+    public Hibernate5Module(SessionFactoryProvider sessionFactoryProvider) {
+        this(null, sessionFactoryProvider);
     }
 
-    public Hibernate5Module(Mapping mapping, SessionFactory sessionFactory) {
-        _sessionFactory = sessionFactory;
+    public Hibernate5Module(Mapping mapping, SessionFactoryProvider sessionFactoryProvider) {
+    	_sessionFactoryProvider = sessionFactoryProvider;
         _mapping = mapping;
     }
 
@@ -200,7 +200,7 @@ public class Hibernate5Module extends com.fasterxml.jackson.databind.Module
 					Entity entityAnnotation = beanDesc.getBeanClass().getAnnotation(Entity.class);
 
 					if (entityAnnotation != null)
-						return new HibernateProxyDeserializer(_sessionFactory, deserializer);
+						return new HibernateProxyDeserializer(_sessionFactoryProvider, deserializer);
 					
 					return deserializer;
 				}
@@ -208,7 +208,7 @@ public class Hibernate5Module extends com.fasterxml.jackson.databind.Module
       	    });
         }
 
-        context.addBeanSerializerModifier(new HibernateSerializerModifier(_moduleFeatures, _sessionFactory));
+        context.addBeanSerializerModifier(new HibernateSerializerModifier(_moduleFeatures));
     }
 
     /**

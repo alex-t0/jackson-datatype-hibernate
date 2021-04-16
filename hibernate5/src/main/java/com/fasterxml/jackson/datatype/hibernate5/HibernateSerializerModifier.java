@@ -13,11 +13,8 @@ public class HibernateSerializerModifier
 {
     protected final int _features;
 
-    protected final SessionFactory _sessionFactory;
-
-    public HibernateSerializerModifier(int features, SessionFactory sessionFactory) {
+    public HibernateSerializerModifier(int features) {
         _features = features;
-        _sessionFactory = sessionFactory;
     }
     
     /*
@@ -31,12 +28,12 @@ public class HibernateSerializerModifier
     @Override
     public JsonSerializer<?> modifyCollectionSerializer(SerializationConfig config,
             CollectionType valueType, BeanDescription beanDesc, JsonSerializer<?> serializer) {
-        return new PersistentCollectionSerializer(valueType, serializer, _features, _sessionFactory);
+        return new PersistentCollectionSerializer(valueType, serializer, _features);
     }
 
     @Override
     public JsonSerializer<?> modifyMapSerializer(SerializationConfig config,
             MapType valueType, BeanDescription beanDesc, JsonSerializer<?> serializer) {
-        return new PersistentCollectionSerializer(valueType, serializer, _features, _sessionFactory);
+        return new PersistentCollectionSerializer(valueType, serializer, _features);
     }
 }
